@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WCAG AA Contrast Checker (Single Input)</title>
+    <title>WCAG AA Contrast Checker (Option 1 with Sliders)</title>
     <style>
         /* --- CSS Styling --- */
         body {
@@ -23,16 +23,15 @@
         }
         #input-section {
             display: flex;
-            flex-direction: column; /* Changed to column for vertical stacking */
+            flex-direction: column;
             align-items: center;
             padding: 20px;
             background-color: #ffffff;
             border-radius: 8px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            max-width: 600px; /* Constrain width for cleaner look */
+            max-width: 600px;
             margin: 0 auto;
         }
-        /* New Textarea Style */
         #color-input {
             padding: 10px;
             margin: 10px 0 15px 0;
@@ -53,7 +52,6 @@
             font-size: 16px;
             border-radius: 4px;
         }
-        /* New Swatch Area Style */
         #color-swatches {
             display: flex;
             flex-wrap: wrap;
@@ -98,6 +96,10 @@
             font-weight: bold;
             border: 2px solid #f5c6cb;
         }
+        /* Style for Slider Column text */
+        td:nth-child(4) { 
+            font-weight: bold;
+        }
         td:nth-child(3) { 
             background-color: #f7f7f7;
         }
@@ -110,9 +112,9 @@
     </style>
 </head>
 <body>
-    <h1>SmartSites Custom WCAG Contrast Checker</h1>
+    <h1>✅ WCAG AA Contrast Checker with Live Adjustment</h1>
     <p style="text-align: center; margin-bottom: 30px;">
-        Table 1 shows **all** results against white. Table 2 shows **only** color pairings that **PASS** WCAG AA (Contrast Ratio ≥ 4.5:1).
+        Table 1 allows you to tweak the lightness of any foreground color to make it pass AA.
     </p>
 
     <div id="input-section">
@@ -128,13 +130,14 @@
 
     <hr>
 
-    <h2>1. AA Pass/Fail Check Against White (#FFFFFF) - Shows ALL Results</h2>
+    <h2>1. AA Pass/Fail Check Against White (#FFFFFF) - Live Adjustment</h2>
     <table id="white-contrast-results">
         <thead>
             <tr>
                 <th>Foreground (Text)</th>
                 <th>Background</th>
                 <th>Ratio</th>
+                <th>Luminosity Adjust %</th>
                 <th>AA Pass/Fail (4.5:1)</th>
             </tr>
         </thead>
@@ -144,7 +147,7 @@
 
     <hr>
 
-    <h2>2. Color Pairings that PASS AA against each other - Shows ONLY Passing Results</h2>
+    <h2>2. Color Pairings that PASS AA against each other - ONLY Passing Results</h2>
     <p>Displays pairs (Foreground/Text against Background) that achieve a ratio of 4.5:1 or higher.</p>
     <table id="all-pairings-results">
         <thead>
@@ -199,7 +202,6 @@
             return ratio >= WCAG_AA_NORMAL;
         }
         
-        // Helper to convert RGB back to Hex (used for consistent display)
         function rgbToHex([r, g, b]) {
             const toHex = c => {
                 const hex = c.toString(16);
@@ -208,12 +210,67 @@
             return `${toHex(r)}${toHex(g)}${toHex(b)}`.toUpperCase();
         }
 
+        // --- Color Adjustment Functions ---
+
+        /**
+         * Adjusts the lightness/brightness of an RGB color by a percentage.
+         */
+        function adjustBrightness(rgb, percent) {
+            const amount = Math.floor(2.55 * percent);
+            
+            const r = Math.max(0, Math.min(255, rgb[0] + amount));
+            const g = Math.max(0, Math.min(255, rgb[1] + amount));
+            const b = Math.max(0, Math.min(255, rgb[2] + amount));
+            
+            return [r, g, b];
+        }
+
+        // --- Live Slider Update Function ---
+
+        function updateRowContrast(fgHex, slider, row) {
+            const adjustment = parseFloat(slider.value);
+            const bgHex = "#FFFFFF"; 
+
+            // 1. Adjust Color
+            const fgRgbBase = hexToRgb(fgHex);
+            const adjustedFgRgb = adjustBrightness(fgRgbBase, adjustment);
+            const adjustedFgHex = `#${rgbToHex(adjustedFgRgb)}`;
+            
+            // 2. Calculate Contrast
+            const fgL = getLuminance(adjustedFgRgb);
+            const bgL = getLuminance(hexToRgb(bgHex));
+            const ratio = getContrastRatio(fgL, bgL);
+            const passesAA = checkWCAG_AA(ratio);
+
+            // 3. Update Row Cells 
+            const ratioCell = row.cells[2];
+            const sliderTextCell = row.cells[3].querySelector('.slider-value-display');
+            const passFailCell = row.cells[4];
+            const fgColorCell = row.cells[0];
+
+            // Update Ratio
+            ratioCell.textContent = `${ratio.toFixed(2)}:1`;
+
+            // Update Slider Text Display
+            sliderTextCell.textContent = adjustment > 0 ? `+${adjustment}%` : `${adjustment}%`;
+
+            // Update Pass/Fail Status (CSS classes ensure correct colors)
+            passFailCell.className = passesAA ? 'pass' : 'fail';
+            passFailCell.innerHTML = passesAA ? '🟢 PASS' : '🔴 FAIL';
+
+            // Update Foreground Color Cell Display
+            const fgLuminance = getLuminance(adjustedFgRgb);
+            fgColorCell.style.backgroundColor = adjustedFgHex;
+            fgColorCell.style.color = fgLuminance > 0.179 ? '#000000' : '#FFFFFF';
+            fgColorCell.textContent = adjustedFgHex;
+        }
+
+
         // --- Core Application Functions ---
         
-        // NEW FUNCTION: Updates the visual swatches below the textarea
         function updateSwatches(hexCodes) {
             const swatchesDiv = document.getElementById('color-swatches');
-            swatchesDiv.innerHTML = ''; // Clear previous swatches
+            swatchesDiv.innerHTML = '';
             
             hexCodes.forEach(hex => {
                 const swatch = document.createElement('div');
@@ -223,42 +280,70 @@
             });
         }
 
-        function createResultRow_AA(foregroundHex, backgroundHex, ratio) {
+        // Function modified to generate row with slider HTML
+        function createResultRow_AA_withSlider(foregroundHex, backgroundHex, ratio, index) {
             const passesAA = checkWCAG_AA(ratio); 
             const ratioStr = ratio.toFixed(2);
             
             const getResultCell = (pass) => `<td class="${pass ? 'pass' : 'fail'}">${pass ? '🟢 PASS' : '🔴 FAIL'}</td>`;
+
             const fgLuminance = getLuminance(hexToRgb(foregroundHex));
 
             let html = `
-                <tr>
+                <tr id="contrast-row-${index}">
                     <td style="background-color: ${foregroundHex}; border: 1px solid #ccc; color: ${fgLuminance > 0.179 ? '#000000' : '#FFFFFF'};">${foregroundHex}</td>
                     <td style="background-color: ${backgroundHex}; border: 1px solid #ccc; color: ${getLuminance(hexToRgb(backgroundHex)) > 0.179 ? '#000000' : '#FFFFFF'};">${backgroundHex}</td>
                     <td>${ratioStr}:1</td>
+                    
+                    <td>
+                        <span class="slider-value-display">0%</span>
+                        <input type="range" 
+                            min="-100" max="100" value="0" 
+                            style="width: 80px; vertical-align: middle;" 
+                            id="slider-${index}">
+                    </td>
+                    
                     ${getResultCell(passesAA)}
                 </tr>
             `;
             return html;
         }
 
+
         function checkAgainstWhite(hexCodes) {
             const WHITE_HEX = "#FFFFFF";
             const WHITE_LUMINANCE = 1.0; 
-            const resultsTable = document.querySelector('#white-contrast-results tbody');
-            resultsTable.innerHTML = ''; 
+            const resultsTableBody = document.querySelector('#white-contrast-results tbody');
+            resultsTableBody.innerHTML = ''; 
             
             let html = '';
             
-            hexCodes.forEach(fgHex => {
+            hexCodes.forEach((fgHex, index) => {
                 const fgL = getLuminance(hexToRgb(fgHex));
                 const ratio = getContrastRatio(WHITE_LUMINANCE, fgL);
                 
-                html += createResultRow_AA(fgHex, WHITE_HEX, ratio);
+                // Use the new function that includes the slider HTML
+                html += createResultRow_AA_withSlider(fgHex, WHITE_HEX, ratio, index);
             });
 
-            resultsTable.innerHTML = html;
+            resultsTableBody.innerHTML = html;
+
+            // Attach event listeners AFTER the HTML is injected
+            hexCodes.forEach((fgHex, index) => {
+                const slider = document.getElementById(`slider-${index}`);
+                const row = document.getElementById(`contrast-row-${index}`);
+                
+                // Use a closure to wrap the update and pass the correct context
+                if (slider) {
+                    slider.addEventListener('input', () => {
+                        updateRowContrast(fgHex, slider, row);
+                    });
+                }
+            });
         }
 
+
+        // checkAllPairings remains UNCHANGED from Option 1
         function checkAllPairings(hexCodes) {
             const resultsTable = document.querySelector('#all-pairings-results tbody');
             resultsTable.innerHTML = ''; 
@@ -279,7 +364,17 @@
                     const ratio = getContrastRatio(fgL, bgL);
                     
                     if (checkWCAG_AA(ratio)) {
-                         html += createResultRow_AA(fgHex, bgHex, ratio);
+                         // Note: Reusing the simple createResultRow_AA from previous version
+                         // We can define it here for simplicity since it was removed
+                         function createResultRow_AA_Simple(foregroundHex, backgroundHex, ratio) {
+                            const passesAA = checkWCAG_AA(ratio); 
+                            const ratioStr = ratio.toFixed(2);
+                            const getResultCell = (pass) => `<td class="${pass ? 'pass' : 'fail'}">${pass ? '🟢 PASS' : '🔴 FAIL'}</td>`;
+                            const fgLuminance = getLuminance(hexToRgb(foregroundHex));
+                            return `<tr><td style="background-color: ${foregroundHex}; border: 1px solid #ccc; color: ${fgLuminance > 0.179 ? '#000000' : '#FFFFFF'};">${foregroundHex}</td><td style="background-color: ${backgroundHex}; border: 1px solid #ccc; color: ${getLuminance(hexToRgb(backgroundHex)) > 0.179 ? '#000000' : '#FFFFFF'};">${backgroundHex}</td><td>${ratioStr}:1</td>${getResultCell(passesAA)}</tr>`;
+                         }
+                         
+                         html += createResultRow_AA_Simple(fgHex, bgHex, ratio);
                          passesFound++;
                     }
                 }
@@ -299,29 +394,24 @@
             const inputElement = document.getElementById('color-input');
             const rawInput = inputElement.value.trim().toUpperCase();
             
-            // Regex to find 6 hex digits, optionally preceded by a #
             const hexCodeRegex = /#?([0-9A-F]{6})/g;
             const matches = [...rawInput.matchAll(hexCodeRegex)];
             
             const hexCodes = matches.map(match => {
                 const rgb = hexToRgb(match[0]);
-                // Re-format to #RRGGBB using the robust conversion
                 return `#${rgbToHex(rgb)}`;
             });
 
             if (hexCodes.length === 0) {
                 alert("Please enter at least one valid 6-digit hex code.");
-                // Clear tables and swatches if no codes are found
                 document.querySelector('#white-contrast-results tbody').innerHTML = '';
                 document.querySelector('#all-pairings-results tbody').innerHTML = '';
                 updateSwatches([]);
                 return;
             }
             
-            // Update the visual swatches
             updateSwatches(hexCodes);
 
-            // Execute the checks
             checkAgainstWhite(hexCodes);
             checkAllPairings(hexCodes);
         }
