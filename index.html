@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WCAG AA Contrast Checker (Custom Filter)</title>
+    <title>WCAG AA Contrast Checker (Single Input)</title>
     <style>
-        /* --- CSS Styling (Retained for Clear Pass/Fail) --- */
+        /* --- CSS Styling --- */
         body {
             font-family: Arial, sans-serif;
             padding: 20px;
@@ -23,27 +23,26 @@
         }
         #input-section {
             display: flex;
-            flex-wrap: wrap;
+            flex-direction: column; /* Changed to column for vertical stacking */
             align-items: center;
-            justify-content: center;
             padding: 20px;
             background-color: #ffffff;
             border-radius: 8px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            max-width: 600px; /* Constrain width for cleaner look */
+            margin: 0 auto;
         }
-        label {
-            margin-right: 5px;
-            font-weight: bold;
-            color: #555;
-        }
-        input[type="text"] {
+        /* New Textarea Style */
+        #color-input {
             padding: 10px;
-            margin: 5px 15px 15px 5px;
+            margin: 10px 0 15px 0;
             border: 2px solid #ccc;
             font-size: 16px;
-            width: 100px;
-            text-align: center;
-            border-radius: 4px;
+            width: 100%;
+            min-height: 100px;
+            box-sizing: border-box;
+            resize: vertical;
+            font-family: monospace;
         }
         button {
             padding: 10px 20px;
@@ -54,6 +53,22 @@
             font-size: 16px;
             border-radius: 4px;
         }
+        /* New Swatch Area Style */
+        #color-swatches {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-bottom: 15px;
+        }
+        .color-swatch {
+            width: 30px;
+            height: 30px;
+            margin: 5px;
+            border: 2px solid #333;
+            border-radius: 50%;
+            box-shadow: 0 0 5px rgba(0,0,0,0.3);
+        }
+        /* Table Styles */
         table {
             width: 100%;
             border-collapse: collapse;
@@ -83,40 +98,30 @@
             font-weight: bold;
             border: 2px solid #f5c6cb;
         }
-
-        /* Color Cells & Ratio Cell */
+        td:nth-child(3) { 
+            background-color: #f7f7f7;
+        }
         #white-contrast-results td:first-child,
         #all-pairings-results td:first-child,
         #all-pairings-results td:nth-child(2) {
             font-weight: bold;
             color: #333;
         }
-        td:nth-child(3) { 
-            background-color: #f7f7f7;
-        }
     </style>
 </head>
 <body>
-    <h1>SmartSites WCAG Color Contrast Checker</h1>
+    <h1>SmartSites Custom WCAGG Contrast Checker</h1>
     <p style="text-align: center; margin-bottom: 30px;">
         Table 1 shows **all** results against white. Table 2 shows **only** color pairings that **PASS** WCAG AA (Contrast Ratio ≥ 4.5:1).
     </p>
 
     <div id="input-section">
-        <label for="color1">Color 1:</label>
-        <input type="text" id="color1" value="#00539C" placeholder="#RRGGBB">
+        <label for="color-input" style="width: 100%; text-align: center; font-weight: bold;">Enter Hex Codes (separated by spaces, commas, or newlines):</label>
+        <textarea id="color-input" 
+            placeholder="#00539C #FFFFFF #FFC000 #333333 #F0F0F0" 
+            rows="5">#00539C #FFFFFF #FFC000 #333333 #F0F0F0</textarea>
         
-        <label for="color2">Color 2:</label>
-        <input type="text" id="color2" value="#FFFFFF" placeholder="#RRGGBB">
-
-        <label for="color3">Color 3:</label>
-        <input type="text" id="color3" value="#FFC000" placeholder="#RRGGBB">
-
-        <label for="color4">Color 4:</label>
-        <input type="text" id="color4" value="#333333" placeholder="#RRGGBB">
-
-        <label for="color5">Color 5:</label>
-        <input type="text" id="color5" value="#F0F0F0" placeholder="#RRGGBB">
+        <div id="color-swatches"></div>
 
         <button onclick="checkContrast()">Check Contrast</button>
     </div>
@@ -157,16 +162,21 @@
     <script>
         // --- Core WCAG Calculation Functions ---
         function hexToRgb(hex) {
-            const shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;
-            hex = hex.replace(shorthandRegex, function(m, r, g, b) {
-                return r + r + g + g + b + b;
-            });
-            const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-            return result ? [
-                parseInt(result[1], 16),
-                parseInt(result[2], 16),
-                parseInt(result[3], 16)
-            ] : [0, 0, 0]; 
+            let cleanHex = hex.trim().toUpperCase().replace(/^#/, '');
+
+            if (cleanHex.length === 3) {
+                cleanHex = cleanHex.split('').map(char => char + char).join('');
+            }
+            
+            if (cleanHex.length !== 6) {
+                return [0, 0, 0]; 
+            }
+
+            const r = parseInt(cleanHex.substring(0, 2), 16);
+            const g = parseInt(cleanHex.substring(2, 4), 16);
+            const b = parseInt(cleanHex.substring(4, 6), 16);
+            
+            return [r, g, b];
         }
 
         function getLuminance(rgb) {
@@ -185,28 +195,44 @@
 
         const WCAG_AA_NORMAL = 4.5;
 
-        /**
-         * Checks the contrast ratio against the WCAG AA standard (4.5:1).
-         */
         function checkWCAG_AA(ratio) {
             return ratio >= WCAG_AA_NORMAL;
         }
         
-        // --- The Main JavaScript Execution ---
+        // Helper to convert RGB back to Hex (used for consistent display)
+        function rgbToHex([r, g, b]) {
+            const toHex = c => {
+                const hex = c.toString(16);
+                return hex.length === 1 ? '0' + hex : hex;
+            };
+            return `${toHex(r)}${toHex(g)}${toHex(b)}`.toUpperCase();
+        }
 
-        /**
-         * Generates the HTML for a single WCAG check result row, focused on AA.
-         */
+        // --- Core Application Functions ---
+        
+        // NEW FUNCTION: Updates the visual swatches below the textarea
+        function updateSwatches(hexCodes) {
+            const swatchesDiv = document.getElementById('color-swatches');
+            swatchesDiv.innerHTML = ''; // Clear previous swatches
+            
+            hexCodes.forEach(hex => {
+                const swatch = document.createElement('div');
+                swatch.className = 'color-swatch';
+                swatch.style.backgroundColor = hex;
+                swatchesDiv.appendChild(swatch);
+            });
+        }
+
         function createResultRow_AA(foregroundHex, backgroundHex, ratio) {
             const passesAA = checkWCAG_AA(ratio); 
             const ratioStr = ratio.toFixed(2);
             
-            // Ensures the <td> elements get the correct class for styling
             const getResultCell = (pass) => `<td class="${pass ? 'pass' : 'fail'}">${pass ? '🟢 PASS' : '🔴 FAIL'}</td>`;
+            const fgLuminance = getLuminance(hexToRgb(foregroundHex));
 
             let html = `
                 <tr>
-                    <td style="background-color: ${foregroundHex}; border: 1px solid #ccc; color: ${getLuminance(hexToRgb(foregroundHex)) > 0.179 ? '#000000' : '#FFFFFF'};">${foregroundHex}</td>
+                    <td style="background-color: ${foregroundHex}; border: 1px solid #ccc; color: ${fgLuminance > 0.179 ? '#000000' : '#FFFFFF'};">${foregroundHex}</td>
                     <td style="background-color: ${backgroundHex}; border: 1px solid #ccc; color: ${getLuminance(hexToRgb(backgroundHex)) > 0.179 ? '#000000' : '#FFFFFF'};">${backgroundHex}</td>
                     <td>${ratioStr}:1</td>
                     ${getResultCell(passesAA)}
@@ -215,7 +241,6 @@
             return html;
         }
 
-        // --- ADJUSTED FUNCTION: Shows ALL results (Pass/Fail) ---
         function checkAgainstWhite(hexCodes) {
             const WHITE_HEX = "#FFFFFF";
             const WHITE_LUMINANCE = 1.0; 
@@ -228,14 +253,12 @@
                 const fgL = getLuminance(hexToRgb(fgHex));
                 const ratio = getContrastRatio(WHITE_LUMINANCE, fgL);
                 
-                // NO FILTERING: Add the row regardless of pass/fail status
                 html += createResultRow_AA(fgHex, WHITE_HEX, ratio);
             });
 
             resultsTable.innerHTML = html;
         }
 
-        // --- FILTERED FUNCTION: Shows ONLY Passing results ---
         function checkAllPairings(hexCodes) {
             const resultsTable = document.querySelector('#all-pairings-results tbody');
             resultsTable.innerHTML = ''; 
@@ -255,7 +278,6 @@
                     
                     const ratio = getContrastRatio(fgL, bgL);
                     
-                    // --- FILTERING STEP ---
                     if (checkWCAG_AA(ratio)) {
                          html += createResultRow_AA(fgHex, bgHex, ratio);
                          passesFound++;
@@ -263,7 +285,6 @@
                 }
             }
 
-            // Display a message if no pairings passed
             if (passesFound === 0) {
                  resultsTable.innerHTML = '<tr><td colspan="4" class="fail">No pairings passed AA contrast.</td></tr>';
             } else {
@@ -275,21 +296,30 @@
          * Main function triggered by the button click and on page load.
          */
         function checkContrast() {
-            const hexCodes = [];
-            for (let i = 1; i <= 5; i++) {
-                const inputElement = document.getElementById(`color${i}`);
-                
-                let hex = inputElement.value.trim().toUpperCase();
-                if (!hex.startsWith('#')) {
-                    hex = '#' + hex;
-                }
-                
-                hexCodes.push(hex);
-                
-                // Update the input element's background and text color for visual feedback
-                inputElement.style.backgroundColor = hex;
-                inputElement.style.color = getLuminance(hexToRgb(hex)) > 0.179 ? '#000000' : '#FFFFFF';
+            const inputElement = document.getElementById('color-input');
+            const rawInput = inputElement.value.trim().toUpperCase();
+            
+            // Regex to find 6 hex digits, optionally preceded by a #
+            const hexCodeRegex = /#?([0-9A-F]{6})/g;
+            const matches = [...rawInput.matchAll(hexCodeRegex)];
+            
+            const hexCodes = matches.map(match => {
+                const rgb = hexToRgb(match[0]);
+                // Re-format to #RRGGBB using the robust conversion
+                return `#${rgbToHex(rgb)}`;
+            });
+
+            if (hexCodes.length === 0) {
+                alert("Please enter at least one valid 6-digit hex code.");
+                // Clear tables and swatches if no codes are found
+                document.querySelector('#white-contrast-results tbody').innerHTML = '';
+                document.querySelector('#all-pairings-results tbody').innerHTML = '';
+                updateSwatches([]);
+                return;
             }
+            
+            // Update the visual swatches
+            updateSwatches(hexCodes);
 
             // Execute the checks
             checkAgainstWhite(hexCodes);
