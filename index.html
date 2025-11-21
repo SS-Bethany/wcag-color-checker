@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WCAG AA Contrast Checker (Custom Filter)</title>
+    <style>
+        /* --- CSS Styling (Retained for Clear Pass/Fail) --- */
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+        h1 {
+            color: #007bff;
+            text-align: center;
+        }
+        h2 {
+            margin-top: 30px;
+            padding-bottom: 5px;
+            border-bottom: 2px solid #ddd;
+            color: #333;
+        }
+        #input-section {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        label {
+            margin-right: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+        input[type="text"] {
+            padding: 10px;
+            margin: 5px 15px 15px 5px;
+            border: 2px solid #ccc;
+            font-size: 16px;
+            width: 100px;
+            text-align: center;
+            border-radius: 4px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #28a745; 
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            border-radius: 4px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            text-align: center;
+        }
+        th, td {
+            padding: 12px;
+            border: 1px solid #ddd;
+        }
+        th {
+            background-color: #e9ecef;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        /* --- Pass/Fail Styling (HIGH PRIORITY) --- */
+        td.pass {
+            background-color: #d4edda !important; 
+            color: #155724 !important; 
+            font-weight: bold;
+            border: 2px solid #c3e6cb;
+        }
+        td.fail {
+            background-color: #f8d7da !important; 
+            color: #721c24 !important; 
+            font-weight: bold;
+            border: 2px solid #f5c6cb;
+        }
+
+        /* Color Cells & Ratio Cell */
+        #white-contrast-results td:first-child,
+        #all-pairings-results td:first-child,
+        #all-pairings-results td:nth-child(2) {
+            font-weight: bold;
+            color: #333;
+        }
+        td:nth-child(3) { 
+            background-color: #f7f7f7;
+        }
+    </style>
+</head>
+<body>
+    <h1>SmartSites WCAG Color Contrast Checker</h1>
+    <p style="text-align: center; margin-bottom: 30px;">
+        Table 1 shows **all** results against white. Table 2 shows **only** color pairings that **PASS** WCAG AA (Contrast Ratio ≥ 4.5:1).
+    </p>
+
+    <div id="input-section">
+        <label for="color1">Color 1:</label>
+        <input type="text" id="color1" value="#00539C" placeholder="#RRGGBB">
+        
+        <label for="color2">Color 2:</label>
+        <input type="text" id="color2" value="#FFFFFF" placeholder="#RRGGBB">
+
+        <label for="color3">Color 3:</label>
+        <input type="text" id="color3" value="#FFC000" placeholder="#RRGGBB">
+
+        <label for="color4">Color 4:</label>
+        <input type="text" id="color4" value="#333333" placeholder="#RRGGBB">
+
+        <label for="color5">Color 5:</label>
+        <input type="text" id="color5" value="#F0F0F0" placeholder="#RRGGBB">
+
+        <button onclick="checkContrast()">Check Contrast</button>
+    </div>
+
+    <hr>
+
+    <h2>1. AA Pass/Fail Check Against White (#FFFFFF) - Shows ALL Results</h2>
+    <table id="white-contrast-results">
+        <thead>
+            <tr>
+                <th>Foreground (Text)</th>
+                <th>Background</th>
+                <th>Ratio</th>
+                <th>AA Pass/Fail (4.5:1)</th>
+            </tr>
+        </thead>
+        <tbody>
+            </tbody>
+    </table>
+
+    <hr>
+
+    <h2>2. Color Pairings that PASS AA against each other - Shows ONLY Passing Results</h2>
+    <p>Displays pairs (Foreground/Text against Background) that achieve a ratio of 4.5:1 or higher.</p>
+    <table id="all-pairings-results">
+        <thead>
+            <tr>
+                <th>Foreground (Text)</th>
+                <th>Background</th>
+                <th>Ratio</th>
+                <th>AA Pass/Fail (4.5:1)</th>
+            </tr>
+        </thead>
+        <tbody>
+            </tbody>
+    </table>
+
+    <script>
+        // --- Core WCAG Calculation Functions ---
+        function hexToRgb(hex) {
+            const shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;
+            hex = hex.replace(shorthandRegex, function(m, r, g, b) {
+                return r + r + g + g + b + b;
+            });
+            const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            return result ? [
+                parseInt(result[1], 16),
+                parseInt(result[2], 16),
+                parseInt(result[3], 16)
+            ] : [0, 0, 0]; 
+        }
+
+        function getLuminance(rgb) {
+            const a = rgb.map(v => {
+                v /= 255;
+                return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+            });
+            return 0.2126 * a[0] + 0.7152 * a[1] + 0.0722 * a[2];
+        }
+
+        function getContrastRatio(l1, l2) {
+            const lighter = Math.max(l1, l2);
+            const darker = Math.min(l1, l2);
+            return (lighter + 0.05) / (darker + 0.05);
+        }
+
+        const WCAG_AA_NORMAL = 4.5;
+
+        /**
+         * Checks the contrast ratio against the WCAG AA standard (4.5:1).
+         */
+        function checkWCAG_AA(ratio) {
+            return ratio >= WCAG_AA_NORMAL;
+        }
+        
+        // --- The Main JavaScript Execution ---
+
+        /**
+         * Generates the HTML for a single WCAG check result row, focused on AA.
+         */
+        function createResultRow_AA(foregroundHex, backgroundHex, ratio) {
+            const passesAA = checkWCAG_AA(ratio); 
+            const ratioStr = ratio.toFixed(2);
+            
+            // Ensures the <td> elements get the correct class for styling
+            const getResultCell = (pass) => `<td class="${pass ? 'pass' : 'fail'}">${pass ? '🟢 PASS' : '🔴 FAIL'}</td>`;
+
+            let html = `
+                <tr>
+                    <td style="background-color: ${foregroundHex}; border: 1px solid #ccc; color: ${getLuminance(hexToRgb(foregroundHex)) > 0.179 ? '#000000' : '#FFFFFF'};">${foregroundHex}</td>
+                    <td style="background-color: ${backgroundHex}; border: 1px solid #ccc; color: ${getLuminance(hexToRgb(backgroundHex)) > 0.179 ? '#000000' : '#FFFFFF'};">${backgroundHex}</td>
+                    <td>${ratioStr}:1</td>
+                    ${getResultCell(passesAA)}
+                </tr>
+            `;
+            return html;
+        }
+
+        // --- ADJUSTED FUNCTION: Shows ALL results (Pass/Fail) ---
+        function checkAgainstWhite(hexCodes) {
+            const WHITE_HEX = "#FFFFFF";
+            const WHITE_LUMINANCE = 1.0; 
+            const resultsTable = document.querySelector('#white-contrast-results tbody');
+            resultsTable.innerHTML = ''; 
+            
+            let html = '';
+            
+            hexCodes.forEach(fgHex => {
+                const fgL = getLuminance(hexToRgb(fgHex));
+                const ratio = getContrastRatio(WHITE_LUMINANCE, fgL);
+                
+                // NO FILTERING: Add the row regardless of pass/fail status
+                html += createResultRow_AA(fgHex, WHITE_HEX, ratio);
+            });
+
+            resultsTable.innerHTML = html;
+        }
+
+        // --- FILTERED FUNCTION: Shows ONLY Passing results ---
+        function checkAllPairings(hexCodes) {
+            const resultsTable = document.querySelector('#all-pairings-results tbody');
+            resultsTable.innerHTML = ''; 
+
+            let html = '';
+            let passesFound = 0;
+            
+            for (let i = 0; i < hexCodes.length; i++) {
+                for (let j = 0; j < hexCodes.length; j++) {
+                    if (i === j) continue;
+                    
+                    const fgHex = hexCodes[i]; 
+                    const bgHex = hexCodes[j]; 
+
+                    const fgL = getLuminance(hexToRgb(fgHex));
+                    const bgL = getLuminance(hexToRgb(bgHex));
+                    
+                    const ratio = getContrastRatio(fgL, bgL);
+                    
+                    // --- FILTERING STEP ---
+                    if (checkWCAG_AA(ratio)) {
+                         html += createResultRow_AA(fgHex, bgHex, ratio);
+                         passesFound++;
+                    }
+                }
+            }
+
+            // Display a message if no pairings passed
+            if (passesFound === 0) {
+                 resultsTable.innerHTML = '<tr><td colspan="4" class="fail">No pairings passed AA contrast.</td></tr>';
+            } else {
+                 resultsTable.innerHTML = html;
+            }
+        }
+        
+        /**
+         * Main function triggered by the button click and on page load.
+         */
+        function checkContrast() {
+            const hexCodes = [];
+            for (let i = 1; i <= 5; i++) {
+                const inputElement = document.getElementById(`color${i}`);
+                
+                let hex = inputElement.value.trim().toUpperCase();
+                if (!hex.startsWith('#')) {
+                    hex = '#' + hex;
+                }
+                
+                hexCodes.push(hex);
+                
+                // Update the input element's background and text color for visual feedback
+                inputElement.style.backgroundColor = hex;
+                inputElement.style.color = getLuminance(hexToRgb(hex)) > 0.179 ? '#000000' : '#FFFFFF';
+            }
+
+            // Execute the checks
+            checkAgainstWhite(hexCodes);
+            checkAllPairings(hexCodes);
+        }
+
+        // Initial check on load with default colors
+        document.addEventListener('DOMContentLoaded', checkContrast);
+    </script>
+</body>
+</html>
