@@ -3,24 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ParentSquare WCAG Contrast Checker (Option 13)</title>
+    <title>ParentSquare WCAG Contrast Checker (2-Column Card View + AAA)</title>
     <link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;700&display=swap" rel="stylesheet">
     
     <style>
         /* --- BRANDING & CSS STYLING (ParentSquare) --- */
         :root {
-            --primary-green: #608400; 
+            --primary-green: #5A7E00; 
             --accent-blue: #1B7DBA;   
             --accent-red: #C7382F;    
             --neutral-border: #cccccc;
-            --page-bg: #fafafa;
+            /* UPDATED PAGE BACKGROUND (Very Light Gray) */
+            --page-bg: #eeeeee; 
             --container-bg: #ffffff;
             --text-dark: #333333;
-            --pass-color: #608400; 
+            --pass-color: #5A7E00; 
             --fail-color: #C7382F; 
             /* New Slider Colors */
             --slider-dark-gray: #555555;
             --slider-light-gray: #E0E0E0;
+            /* New Status Backgrounds */
+            --status-pass-bg: #e6ffe6;
+            --status-fail-bg: #ffe6e6;
+            --status-mixed-bg: #f0f0f0;
         }
 
         body {
@@ -42,47 +47,47 @@
         h1 {
             font-weight: bold;
             color: var(--primary-green);
-            text-align: center;
+            text-align: left;
             font-size: 2.2em;
-            padding-top: 20px;
-            margin-bottom: 30px; 
+            padding-top: 0;
+            margin-bottom: 10px; 
             display: flex;
             align-items: center;
-            justify-content: center;
-            gap: 10px;
-        }
-        .logo-icon {
-            display: inline-block;
-            color: var(--primary-green); 
-            font-size: 1.1em;
-        }
-        .logo-icon.fa-kit.fa-psq-regular::before {
-           
-            font-family: 'Work Sans', sans-serif; 
         }
 
+        /* H2 STYLE (Underlined, no background/outline) */
         h2 {
             font-weight: bold;
             margin-top: 0; 
-            padding-top: 15px; /* Added top padding to separate from content above */
-            padding-bottom: 5px;
-            border-bottom: 2px solid var(--primary-green);
+            padding: 15px 0 10px 0; 
+            background-color: transparent; 
+            border-radius: 0; 
             color: var(--text-dark);
             margin-left: 0 !important; 
+            
+            border-bottom: 2px solid var(--text-dark); 
+            margin-bottom: 15px; 
         }
 
-        /* --- Header Content Layout (Equal Height) --- */
+        /* --- Input & Header Section Layout --- */
         #header-content {
             display: flex;
             justify-content: space-between;
-            align-items: stretch; 
+            align-items: stretch;
             gap: 40px;
             margin-bottom: 30px;
         }
-
-        /* Left Side: Input */
+        
+        /* Left Column: Title and Instructions */
+        #header-text-wrapper {
+            flex: 1;
+            padding-top: 20px;
+        }
+        
+        /* Right Column: Input Box - PADDING/MARGIN ADJUSTED */
         #main-input-wrapper {
-            flex: 2;
+            flex: 1;
+            max-width: 600px;
             background-color: var(--container-bg);
             padding: 20px;
             border-radius: 8px;
@@ -90,19 +95,9 @@
             display: flex;
             flex-direction: column;
             justify-content: space-between; 
-        }
-
-        /* Right Side: Toggles */
-        #options-wrapper {
-            flex: 1;
-            background-color: var(--container-bg);
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
-            min-width: 250px;
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-start;
+            
+            /* Corrected alignment with margin-top */
+            margin-top: 30px; 
         }
 
         /* Input Field and Button Styling */
@@ -113,7 +108,7 @@
             font-size: 16px;
             width: 100%;
             flex-grow: 1; 
-            min-height: 100px;
+            min-height: 80px;
             box-sizing: border-box;
             resize: vertical;
             font-family: monospace;
@@ -131,72 +126,11 @@
             border-radius: 4px; 
             transition: background-color 0.2s;
         }
-
-        /* Options Section & Toggle Styling */
-        #options-section {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-            align-items: flex-start;
-            padding-top: 10px;
-        }
-        .toggle-container {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            color: var(--text-dark);
-        }
-        .toggle-label-text {
-            font-weight: bold;
-        }
-        .toggle-btn-wrapper {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-weight: bold;
-        }
-        /* New swatch indicators for toggle */
-        .toggle-swatch {
-            width: 18px;
-            height: 18px;
-            border-radius: 50%;
-            border: 1px solid #999; 
+        button:hover {
+            background-color: #4c6a00;
         }
 
-        .toggle-btn {
-            width: 50px;
-            height: 26px;
-            background-color: var(--slider-light-gray); 
-            border-radius: 13px;
-            position: relative;
-            cursor: pointer;
-            padding: 0;
-            transition: background-color 0.2s;
-        }
-        .toggle-btn:before {
-            content: '';
-            position: absolute;
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            top: 3px;
-            left: 3px;
-            background-color: white;
-            transition: transform 0.2s;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.4);
-        }
-        .toggle-btn.active {
-            background-color: var(--slider-dark-gray); 
-        }
-        .toggle-btn.active:before {
-            transform: translateX(24px);
-        }
-        .checkbox-container {
-            display: flex;
-            align-items: center;
-        }
-
-        /* Swatches (Horizontal Alignment) */
+        /* Swatches */
         #color-swatches {
             display: flex; 
             margin-bottom: 0; 
@@ -210,50 +144,217 @@
             border-radius: 50%;
         }
 
-        /* Table Styling (Full width inside the 80px margin) */
-        table {
-            width: 100%; 
-            margin: 20px 0; 
-            border-collapse: collapse;
+        /* --- TWO-COLUMN LAYOUT CONTAINER (Results) --- */
+        #results-layout {
+            display: grid;
+            grid-template-columns: 3fr 1fr;
+            gap: 40px;
+            margin-top: 40px;
+        }
+
+        /* --- LIVE CARD STYLING (Left Column) --- */
+        #live-check-wrapper {
+             grid-column: 1 / 2;
+        }
+        #card-results {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); 
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .contrast-card {
+            background-color: var(--container-bg);
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            border: 1px solid var(--neutral-border);
+            display: flex;
+            flex-direction: column;
+            min-height: 220px;
+        }
+        .card-preview {
+            padding: 20px;
+            min-height: 100px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.5em;
+            font-weight: bold;
+            transition: background-color 0.2s, color 0.2s;
+        }
+        .card-preview-text {
+            margin-top: 5px;
+            font-size: 0.6em;
+            opacity: 0.8;
+        }
+        /* Card controls background (white) */
+        .card-controls {
+            padding: 15px;
+            background-color: var(--container-bg); 
+            border-top: 1px solid var(--neutral-border);
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .card-control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        .card-control-group label {
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+        .ratio-display {
+            font-size: 1.1em;
+            font-weight: bold;
             text-align: center;
-            border-radius: 8px; 
-            overflow: hidden; 
-            box-shadow: 0 1px 5px rgba(0, 0, 0, 0.08);
-        }
-        th, td {
-            padding: 12px;
-            border: 1px solid #e0e0e0;
-        }
-        th {
-            background-color: #e9ecef;
-            color: var(--text-dark);
+            margin-bottom: 10px;
+            padding: 5px;
+            border-bottom: 1px dotted #ccc;
         }
         
-        /* General Table Styling */
-        td.pass { background-color: #f0fff0 !important; color: var(--pass-color) !important; font-weight: bold; }
-        td.fail { background-color: #fff0f0 !important; color: var(--fail-color) !important; font-weight: bold; }
-        
-        /* --- SLIDER STYLING --- */
-        .slider-column { font-weight: bold; width: 200px; }
-        .slider-column input[type="range"] { 
-            width: 100%; 
-            vertical-align: middle; 
-            -webkit-appearance: none; 
-            height: 8px;
-            border-radius: 5px;
-            background: var(--slider-light-gray); 
+        /* --- Pass/Fail Indicator Container --- */
+        .pass-fail-indicator {
+            padding: 8px;
+            border-radius: 4px;
+            font-weight: bold;
+            margin-top: auto;
+            font-size: 1em;
+            
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            gap: 10px;
         }
-        input[type=range]::-webkit-slider-thumb {
+        .pass-fail-indicator.pass { background-color: var(--status-pass-bg); }
+        .pass-fail-indicator.fail { background-color: var(--status-fail-bg); }
+        .pass-fail-indicator.mixed { background-color: var(--status-mixed-bg); }
+        
+        /* --- Pill-Shaped Indicator Styling --- */
+        .indicator-label {
+            padding: 4px 10px;
+            border-radius: 20px; /* Pill shape */
+            font-size: 0.9em;
+            white-space: nowrap;
+        }
+        .indicator-label.pass { 
+            background-color: var(--primary-green); 
+            color: white;
+        }
+        .indicator-label.fail { 
+            background-color: var(--accent-red); 
+            color: white;
+        }
+
+        /* Slider Styling */
+        .slider-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        input[type="range"] {
+            flex-grow: 1; 
+            width: 100%;
             -webkit-appearance: none;
-            width: 16px;
-            height: 16px;
-            border-radius: 50%;
-            background: var(--slider-dark-gray); 
-            cursor: pointer;
-            margin-top: -4px; 
+            height: 8px;
+            background: var(--slider-light-gray);
+            border-radius: 5px;
+            outline: none;
+            transition: opacity .2s;
         }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--primary-green);
+            cursor: pointer;
+            border: 2px solid white;
+            box-shadow: 0 0 2px rgba(0,0,0,0.3);
+        }
+        input[type="range"]::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--primary-green);
+            cursor: pointer;
+            border: 2px solid white;
+            box-shadow: 0 0 2px rgba(0,0,0,0.3);
+        }
+
+
+        /* --- PAIRINGS CARD STYLING --- */
+        #pairings-wrapper {
+            grid-column: 2 / 3;
+        }
+        #pairings-cards {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .pairing-card {
+            background-color: var(--container-bg);
+            border-radius: 8px;
+            box-shadow: 0 1px 5px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+            border: 1px solid var(--neutral-border);
+            text-align: center;
+        }
+        .pairing-preview {
+            padding: 10px;
+            font-weight: bold;
+            font-size: 0.9em;
+            line-height: 1.2;
+            min-height: 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .pairing-details {
+            padding: 8px;
+            font-size: 0.8em;
+            color: var(--text-dark);
+            border-top: 1px dotted #e0e0e0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .pairing-indicator {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+        .pairing-indicator.pass { background-color: var(--status-pass-bg); color: var(--pass-color); }
         
-        /* Responsive fallback for smaller screens */
+        /* --- Disclaimer Box Styling --- */
+        #disclaimer-box {
+            border: 1px solid var(--accent-blue);
+            background-color: #eaf6ff;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 40px;
+            margin-bottom: 20px;
+            font-size: 0.95em;
+        }
+        #disclaimer-box h3 {
+            color: var(--accent-blue);
+            margin-top: 0;
+            margin-bottom: 10px;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+        #disclaimer-box p {
+            margin-bottom: 10px;
+        }
+
+
+        /* --- Responsive fallback for smaller screens --- */
         @media (max-width: 900px) {
             #app-container {
                 padding: 0 20px; 
@@ -262,10 +363,29 @@
                 flex-direction: column;
                 align-items: stretch;
             }
-            #main-input-wrapper, #options-wrapper {
+            #main-input-wrapper {
                 width: 100%;
+                max-width: 100%;
                 min-width: unset;
-                min-height: unset; 
+                order: 1;
+                /* Reset margin/padding for mobile stacking */
+                margin-top: 0; 
+                padding-top: 20px;
+            }
+            #header-text-wrapper {
+                padding-top: 0;
+                order: 0;
+            }
+            h1 {
+                text-align: center;
+                justify-content: center;
+            }
+            #results-layout {
+                grid-template-columns: 1fr; 
+                gap: 20px;
+            }
+            #live-check-wrapper, #pairings-wrapper {
+                grid-column: 1 / -1; 
             }
         }
     </style>
@@ -273,20 +393,41 @@
 <body>
     <div id="app-container">
         
-        <h1>
-            <i class="logo-icon fa-kit fa-psq-regular"></i>
-            ParentSquare Contrast Checker
-        </h1>
-
-      
-
         <div id="header-content">
+            <div id="header-text-wrapper">
+                <h1>
+                    ParentSquare Contrast Checker
+                </h1>
+
+                <p>
+                    Welcome! This tool checks if your color palette meets the WCAG AA contrast ratio of 4.5:1, which is required for normal-sized text to be web accessible.
+                </p>
+                <h3>How to Use</h3>
+                <p>
+                    Enter your colors: Input your 6-digit Hex Codes (e.g., `#5A7E00 #FFFFFF`) into the box and click <strong>Check Contrast</strong>.
+                </p>
+                <h3>Results</h3>
+                <p>
+                    Live Check Cards (Left):
+                    <ul>
+                        <li>Each card displays one of your colors.</li>
+                        <li>Use the <strong>Luminosity Adjust slider</strong> to instantly lighten or darken the background color.</li>
+                        <li>Use the <strong>Text Color button</strong> to test the contrast against white or black text.</li>
+                        <li>The <strong>Pass/Fail indicator</strong> updates immediately based on the 4.5:1 standard.</li>
+                    </ul>
+                </p>
+                <p>
+                    Compatible Pairings (Right):
+                    This column automatically lists all possible color combinations from your input that pass the required 4.5:1 contrast ratio.
+                </p>
+                </div>
+            
             <div id="main-input-wrapper">
                 <div>
                     <label for="color-input" style="font-weight: bold; display: block; margin-bottom: 5px;">Hex Codes:</label>
                     <textarea id="color-input" 
-                        placeholder="#587C00 #1B7DBA #F4BE54 #BC609F #FFFFFF" 
-                        rows="5">#587C00 #1B7DBA #F4BE54 #BC609F #FFFFFF</textarea>
+                        placeholder="#5A7E00 #1B7DBA #F4BE54 #BC609F #FFFFFF" 
+                        rows="4">#5A7E00 #1B7DBA #F4BE54 #BC609F #FFFFFF</textarea>
                 </div>
                 
                 <div style="display: flex; justify-content: space-between; align-items: center;">
@@ -294,63 +435,35 @@
                     <div id="color-swatches"></div>
                 </div>
             </div>
+        </div>
 
-            <div id="options-wrapper">
-                <h2>Adjustments</h2>
-                <div id="options-section">
-                    <div class="toggle-container">
-                        <span class="toggle-label-text">Check colors against white and black:</span>
-                        <div class="toggle-btn-wrapper">
-                            <div class="toggle-swatch" style="background-color: #FFFFFF;"></div>
-                            <button id="bg-toggle" onclick="toggleBackground()" class="toggle-btn" aria-label="Toggle background color between White and Black"></button>
-                            <div class="toggle-swatch" style="background-color: #000000;"></div>
-                        </div>
+        <div id="results-layout">
+            <div id="live-check-wrapper">
+                <h2 id="table1-header">1. Live Color Check (Text vs. Card Color)</h2>
+                <div id="card-results">
                     </div>
-                    
-                    <div class="checkbox-container">
-                        <input type="checkbox" id="aaa-check" onclick="checkContrast()">
-                        <label for="aaa-check" style="font-weight: bold;">Check WCAG AAA (7.0:1)</label>
+            </div>
+
+            <div id="pairings-wrapper">
+                <h2 style="margin-top: 0;">2. Compatible AA Pairings</h2>
+                <p style="margin-top: -10px; margin-bottom: 15px; font-size: 0.9em;">(Pairs that achieve a ratio of 4.5:1 or higher)</p>
+                <div id="pairings-cards">
                     </div>
-                </div>
             </div>
         </div>
 
-        <h2 id="table1-header">AA/AAA Check Against White (#FFFFFF) - Live Adjustment</h2>
-        <table id="white-contrast-results">
-            <thead>
-                <tr>
-                    <th>Foreground (Text)</th>
-                    <th id="table1-bg-header">Background (#FFFFFF)</th>
-                    <th>Ratio</th>
-                    <th class="slider-column">Luminosity Adjust %</th>
-                    <th>AA Pass/Fail (4.5:1)</th>
-                    <th id="aaa-header" style="display: none;">AAA Pass/Fail (7.0:1)</th>
-                </tr>
-            </thead>
-            <tbody>
-                </tbody>
-        </table>
-
-        <h2>Color Pairings that PASS AA against each other - ONLY Passing Results</h2>
-        <p>Displays pairs (Foreground/Text against Background) that achieve a ratio of 4.5:1 or higher.</p>
-        <table id="all-pairings-results">
-            <thead>
-                <tr>
-                    <th>Foreground (Text)</th>
-                    <th>Background</th>
-                    <th>Ratio</th>
-                    <th>AA Pass/Fail (4.5:1)</th>
-                </tr>
-            </thead>
-            <tbody>
-                </tbody>
-        </table>
-    </div> <script>
+        <div id="disclaimer-box">
+            <h3>💡 Important Note on SmartSite Accessibility</h3>
+            <p>For SmartSite Sites, your color palette only needs to meet the WCAG AA contrast requirement (4.5:1) for normal text.</p>
+            <p>This means that any text element that is not considered "large text" must achieve a contrast ratio of at least 4.5:1 with its background color.</p>
+            <p>The large text requirement (which only needs a 3:1 ratio) does not apply to SmartSite Sites, as they are designed to prioritize the stricter 4.5:1 standard across all body and display text for maximum accessibility.</p>
+        </div>
+        </div>
+    <script>
         // Define WCAG constants
         const WCAG_AA_NORMAL = 4.5;
-        const WCAG_AAA_NORMAL = 7.0;
-        let currentBgHex = "#FFFFFF"; // Default background
-
+        const WCAG_AAA_NORMAL = 7.0; 
+        
         // --- Core WCAG Calculation Functions ---
         function hexToRgb(hex) {
             let cleanHex = hex.trim().toUpperCase().replace(/^#/, '');
@@ -383,14 +496,15 @@
         function checkWCAG_AA(ratio) {
             return ratio >= WCAG_AA_NORMAL;
         }
-
-        function checkWCAG_AAA(ratio) {
+        
+        function checkWCAG_AAA(ratio) { 
             return ratio >= WCAG_AAA_NORMAL;
         }
         
         function rgbToHex([r, g, b]) {
             const toHex = c => {
-                const hex = c.toString(16);
+                const val = Math.round(Math.max(0, Math.min(255, c)));
+                const hex = val.toString(16);
                 return hex.length === 1 ? '0' + hex : hex;
             };
             return `${toHex(r)}${toHex(g)}${toHex(b)}`.toUpperCase();
@@ -406,78 +520,101 @@
             return [r, g, b];
         }
 
-        // --- Toggle and Option Management ---
+        // --- Live Card Toggle and Update Functions ---
         
-        function toggleBackground() {
-            const toggleButton = document.getElementById('bg-toggle');
-            const bgHeader = document.getElementById('table1-bg-header');
-            const tableHeader = document.getElementById('table1-header');
+        function toggleCardTextColor(cardIndex, fgOriginalHex) {
+            const card = document.getElementById(`contrast-card-${cardIndex}`);
+            const previewDiv = card.querySelector('.card-preview');
+            const button = card.querySelector('.text-toggle-btn');
             
-            if (currentBgHex === "#FFFFFF") {
-                currentBgHex = "#000000";
-                toggleButton.classList.add('active');
-                bgHeader.textContent = "Background (#000000)";
-                tableHeader.textContent = "1. AA/AAA Check Against Black (#000000) - Live Adjustment";
+            const currentTextHex = card.dataset.textColor;
+            let newTextHex;
+            let buttonText;
+            
+            if (currentTextHex === '#000000') { 
+                newTextHex = '#FFFFFF';
+                buttonText = 'Switch to Black Text';
+                button.classList.remove('black-text');
+                button.classList.add('white-text');
             } else {
-                currentBgHex = "#FFFFFF";
-                toggleButton.classList.remove('active');
-                bgHeader.textContent = "Background (#FFFFFF)";
-                tableHeader.textContent = "1. AA/AAA Check Against White (#FFFFFF) - Live Adjustment";
+                newTextHex = '#000000';
+                buttonText = 'Switch to White Text';
+                button.classList.remove('white-text');
+                button.classList.add('black-text');
             }
-            checkContrast(); 
+            
+            // 1. SET THE NEW TEXT COLOR VISUALLY AND IN THE DATA ATTRIBUTE
+            previewDiv.style.color = newTextHex;
+            card.dataset.textColor = newTextHex; 
+            button.textContent = buttonText;
+            
+            // 2. RUN THE CONTRAST CHECK WITH THE NEW COLOR
+            updateCardContrast(cardIndex, fgOriginalHex);
         }
 
-        // --- Live Slider Update Function ---
-
-        function updateRowContrast(fgOriginalHex, slider, row) {
+        function updateCardContrast(cardIndex, fgOriginalHex) {
+            const card = document.getElementById(`contrast-card-${cardIndex}`);
+            const slider = card.querySelector('input[type="range"]');
+            
+            // 1. Adjust Background Color
             const adjustment = parseFloat(slider.value);
-            const bgHex = currentBgHex;
-            const isAAA = document.getElementById('aaa-check').checked;
-
-            // 1. Adjust Color
             const fgRgbBase = hexToRgb(fgOriginalHex);
             const adjustedFgRgb = adjustBrightness(fgRgbBase, adjustment);
             const adjustedFgHex = `#${rgbToHex(adjustedFgRgb)}`;
             
-            // 2. Calculate Contrast
-            const fgL = getLuminance(adjustedFgRgb);
-            const bgL = getLuminance(hexToRgb(bgHex));
+            // 2. Determine Foreground (Text) Color 
+            const textHex = card.dataset.textColor;
+            
+            // 3. Calculate Contrast
+            const fgL = getLuminance(hexToRgb(textHex));
+            const bgL = getLuminance(adjustedFgRgb); 
+            
             const ratio = getContrastRatio(fgL, bgL);
             const passesAA = checkWCAG_AA(ratio);
             const passesAAA = checkWCAG_AAA(ratio);
 
-            // 3. Update Row Cells 
-            const fgColorCell = row.cells[0];
-            const ratioCell = row.cells[2];
-            const sliderTextCell = row.cells[3].querySelector('.slider-value-display');
-            const passFailAACell = row.cells[4];
-            const passFailAAACell = row.cells[5]; 
+            // 4. Update Card Elements
+            const previewDiv = card.querySelector('.card-preview');
+            const ratioDisplay = card.querySelector('.ratio-display');
+            const sliderTextDisplay = card.querySelector('.slider-value-display');
+            const passFailIndicator = card.querySelector('.pass-fail-indicator');
+            const textCodeDisplay = card.querySelector('.card-preview-text');
+            const aaaIndicator = card.querySelector('.aaa-indicator');
+            const aaIndicator = card.querySelector('.aa-indicator');
 
-            // Update Ratio
-            ratioCell.textContent = `${ratio.toFixed(2)}:1`;
-
-            // Update Slider Text Display
-            sliderTextCell.textContent = adjustment > 0 ? `+${adjustment}%` : `${adjustment}%`;
-
-            // Update Pass/Fail Status (AA)
-            passFailAACell.className = passesAA ? 'pass' : 'fail';
-            passFailAACell.innerHTML = passesAA ? '🟢 PASS' : '🔴 FAIL';
+            // Update Preview (Card Background color only)
+            previewDiv.style.backgroundColor = adjustedFgHex;
             
-            // Update Pass/Fail Status (AAA)
-            if (isAAA) {
-                 passFailAAACell.className = passesAAA ? 'pass' : 'fail';
-                 passFailAAACell.innerHTML = passesAAA ? '🟢 PASS' : '🔴 FAIL';
-            }
+            // Update the helper text to show the new adjusted hex
+            textCodeDisplay.textContent = `BG: ${adjustedFgHex} / FG: ${textHex}`; // Corrected Label
+            
+            ratioDisplay.textContent = `Ratio: ${ratio.toFixed(2)}:1`;
 
-            // Update Foreground Color Cell Display
-            const fgLuminance = getLuminance(adjustedFgRgb);
-            fgColorCell.style.backgroundColor = adjustedFgHex;
-            fgColorCell.style.color = fgLuminance > 0.179 ? '#000000' : '#FFFFFF';
-            fgColorCell.textContent = adjustedFgHex;
+            sliderTextDisplay.textContent = adjustment > 0 ? `+${adjustment}%` : `${adjustment}%`;
+
+            // 5. Update AAA Status 
+            aaaIndicator.classList.remove('pass', 'fail');
+            aaaIndicator.classList.add(passesAAA ? 'pass' : 'fail');
+            aaaIndicator.innerHTML = passesAAA ? '&#10003; AAA' : '&#10007; AAA';
+
+            // 6. Update AA Status 
+            aaIndicator.classList.remove('pass', 'fail');
+            aaIndicator.classList.add(passesAA ? 'pass' : 'fail');
+            aaIndicator.innerHTML = passesAA ? '&#10003; AA' : '&#10007; AA';
+
+            // 7. Update Container Background
+            passFailIndicator.classList.remove('pass', 'fail', 'mixed');
+            if (passesAAA) {
+                passFailIndicator.classList.add('pass');
+            } else if (passesAA) {
+                 passFailIndicator.classList.add('mixed');
+            } else {
+                 passFailIndicator.classList.add('fail');
+            }
         }
 
 
-        // --- Row Generation and Table Updates ---
+        // --- Card Generation and Container Updates ---
         
         function updateSwatches(hexCodes) {
             const swatchesDiv = document.getElementById('color-swatches');
@@ -491,80 +628,127 @@
             });
         }
 
-        function createResultRow_WithSlider(foregroundHex, backgroundHex, ratio, index, isAAA) {
-            const passesAA = checkWCAG_AA(ratio); 
-            const passesAAA = checkWCAG_AAA(ratio); 
-            const ratioStr = ratio.toFixed(2);
-            
-            const getResultCell = (pass) => `<td class="${pass ? 'pass' : 'fail'}">${pass ? '🟢 PASS' : '🔴 FAIL'}</td>`;
-
+        // Function to create the interactive live adjustment card
+        function createResultCard(foregroundHex, index) {
             const fgLuminance = getLuminance(hexToRgb(foregroundHex));
+            const initialTextColor = fgLuminance > 0.179 ? '#000000' : '#FFFFFF'; 
+            
+            // Initial contrast check
+            const initialFgL = getLuminance(hexToRgb(initialTextColor));
+            const initialBgL = getLuminance(hexToRgb(foregroundHex));
+            const initialRatio = getContrastRatio(initialFgL, initialBgL);
+            
+            const passesAA = checkWCAG_AA(initialRatio); 
+            const passesAAA = checkWCAG_AAA(initialRatio); 
+
+            const aaaClass = passesAAA ? 'pass' : 'fail';
+            const aaClass = passesAA ? 'pass' : 'fail';
+
+            const buttonText = initialTextColor === '#000000' ? 'Switch to White Text' : 'Switch to Black Text';
+            const buttonClass = initialTextColor === '#000000' ? 'black-text' : 'white-text';
+            
+            // Determine overall indicator background color
+            let indicatorClass;
+            if (passesAAA) {
+                indicatorClass = 'pass';
+            } else if (passesAA) {
+                indicatorClass = 'mixed';
+            } else {
+                indicatorClass = 'fail';
+            }
+            
+            const aaaText = passesAAA ? '&#10003; AAA' : '&#10007; AAA';
+            const aaText = passesAA ? '&#10003; AA' : '&#10007; AA';
+
+            // Corrected helper text label in the initial card creation
+            const helperText = `BG: ${foregroundHex} / FG: ${initialTextColor}`;
+
 
             let html = `
-                <tr id="contrast-row-${index}">
-                    <td style="background-color: ${foregroundHex}; border: 1px solid #ccc; color: ${fgLuminance > 0.179 ? '#000000' : '#FFFFFF'};">${foregroundHex}</td>
-                    <td style="background-color: ${backgroundHex}; border: 1px solid #ccc; color: ${getLuminance(hexToRgb(backgroundHex)) > 0.179 ? '#000000' : '#FFFFFF'};">${backgroundHex}</td>
-                    <td>${ratioStr}:1</td>
+                <div class="contrast-card" id="contrast-card-${index}" 
+                     data-original-hex="${foregroundHex}" 
+                     data-text-color="${initialTextColor}">
+                    <div class="card-preview" 
+                        style="background-color: ${foregroundHex}; color: ${initialTextColor};">
+                        Preview Text
+                        <span class="card-preview-text">${helperText}</span>
+                    </div>
                     
-                    <td class="slider-column">
-                        <span class="slider-value-display">0%</span>
-                        <input type="range" 
-                            min="-100" max="100" value="0" 
-                            id="slider-${index}">
-                    </td>
-                    
-                    ${getResultCell(passesAA)}
-                    <td class="${passesAAA ? 'pass' : 'fail'}" id="aaa-cell-${index}" style="display: ${isAAA ? 'table-cell' : 'none'};">${passesAAA ? '🟢 PASS' : '🔴 FAIL'}</td>
-                </tr>
+                    <div class="card-controls">
+                        <div class="ratio-display">Ratio: ${initialRatio.toFixed(2)}:1</div>
+
+                        <div class="card-control-group">
+                            <label>Text Color</label>
+                            <button 
+                                class="text-toggle-btn ${buttonClass}" 
+                                onclick="toggleCardTextColor(${index}, '${foregroundHex}')">
+                                ${buttonText}
+                            </button>
+                        </div>
+
+                        <div class="card-control-group">
+                            <label>Luminosity Adjust</label>
+                            <div class="slider-wrapper">
+                                <span class="slider-value-display">0%</span>
+                                <input type="range" 
+                                    min="-100" max="100" value="0" 
+                                    id="slider-${index}" 
+                                    oninput="updateCardContrast(${index}, '${foregroundHex}')">
+                            </div>
+                        </div>
+
+                        <div class="pass-fail-indicator ${indicatorClass}">
+                            <span class="indicator-label aaa-indicator ${aaaClass}">${aaaText}</span>
+                            <span class="indicator-label aa-indicator ${aaClass}">${aaText}</span>
+                        </div>
+                    </div>
+                </div>
             `;
             return html;
         }
 
         function checkAgainstWhite(hexCodes) {
-            const bgHex = currentBgHex;
-            const bgLuminance = getLuminance(hexToRgb(bgHex)); 
-            const resultsTableBody = document.querySelector('#white-contrast-results tbody');
-            const isAAA = document.getElementById('aaa-check').checked;
-            
-            resultsTableBody.innerHTML = ''; 
+            const resultsCardContainer = document.getElementById('card-results');
+            resultsCardContainer.innerHTML = ''; 
             
             let html = '';
             
-            // Update the AAA column header visibility
-            const aaaHeader = document.getElementById('aaa-header');
-            if (aaaHeader) {
-                 aaaHeader.style.display = isAAA ? 'table-cell' : 'none';
-            }
-
             hexCodes.forEach((fgHex, index) => {
-                const fgL = getLuminance(hexToRgb(fgHex));
-                const ratio = getContrastRatio(bgLuminance, fgL);
-                
-                html += createResultRow_WithSlider(fgHex, bgHex, ratio, index, isAAA);
+                html += createResultCard(fgHex, index);
             });
 
-            resultsTableBody.innerHTML = html;
-
-            // Attach event listeners AFTER the HTML is injected
-            hexCodes.forEach((fgHex, index) => {
-                const slider = document.getElementById(`slider-${index}`);
-                const row = document.getElementById(`contrast-row-${index}`);
-                
-                if (slider) {
-                    slider.value = 0; 
-                    row.cells[3].querySelector('.slider-value-display').textContent = '0%';
-                    
-                    slider.addEventListener('input', () => {
-                        updateRowContrast(fgHex, slider, row); 
-                    });
-                }
-            });
+            resultsCardContainer.innerHTML = html;
         }
 
-        // checkAllPairings remains for the filtered second table
+        // --- Function to create a simple, static pairing card ---
+        function createPairingCard(foregroundHex, backgroundHex, ratio) {
+            const ratioStr = ratio.toFixed(2);
+            const fgLuminance = getLuminance(hexToRgb(foregroundHex));
+            const bgLuminance = getLuminance(hexToRgb(backgroundHex));
+            const fgTextColor = fgLuminance > 0.179 ? '#000000' : '#FFFFFF';
+            const bgTextColor = bgLuminance > 0.179 ? '#000000' : '#FFFFFF';
+
+            return `
+                <div class="pairing-card">
+                    <div class="pairing-preview" style="background-color: ${backgroundHex}; color: ${foregroundHex};">
+                        ${foregroundHex}
+                    </div>
+                    <div class="pairing-details">
+                        <span style="color: ${fgTextColor}; background-color: ${foregroundHex}; padding: 3px 6px; border-radius: 3px;">FG: ${foregroundHex}</span>
+                        <span style="color: ${bgTextColor}; background-color: ${backgroundHex}; padding: 3px 6px; border-radius: 3px;">BG: ${backgroundHex}</span>
+                    </div>
+                    <div class="pairing-details" style="border-top: none;">
+                        <span>Ratio: <strong>${ratioStr}:1</strong></span>
+                        <span class="pairing-indicator pass">&#10003; AA PASS</span>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Renders compatible pairings as cards
         function checkAllPairings(hexCodes) {
-            const resultsTable = document.querySelector('#all-pairings-results tbody');
-            resultsTable.innerHTML = ''; 
+            const resultsContainer = document.getElementById('pairings-cards');
+            resultsContainer.innerHTML = ''; 
 
             let html = '';
             let passesFound = 0;
@@ -582,25 +766,16 @@
                     const ratio = getContrastRatio(fgL, bgL);
                     
                     if (checkWCAG_AA(ratio)) {
-                         function createResultRow_AA_Simple(foregroundHex, backgroundHex, ratio) {
-                            const passesAA = checkWCAG_AA(ratio); 
-                            const ratioStr = ratio.toFixed(2);
-                            const getResultCell = (pass) => `<td class="${pass ? 'pass' : 'fail'}">${pass ? '🟢 PASS' : '🔴 FAIL'}</td>`;
-                            const fgLuminance = getLuminance(hexToRgb(foregroundHex));
-                            const bgLuminance = getLuminance(hexToRgb(backgroundHex));
-                            return `<tr><td style="background-color: ${foregroundHex}; border: 1px solid #ccc; color: ${fgLuminance > 0.179 ? '#000000' : '#FFFFFF'};">${foregroundHex}</td><td style="background-color: ${backgroundHex}; border: 1px solid #ccc; color: ${bgLuminance > 0.179 ? '#000000' : '#FFFFFF'};">${backgroundHex}</td><td>${ratioStr}:1</td>${getResultCell(passesAA)}</tr>`;
-                         }
-                         
-                         html += createResultRow_AA_Simple(fgHex, bgHex, ratio);
-                         passesFound++;
+                            html += createPairingCard(fgHex, bgHex, ratio);
+                            passesFound++;
                     }
                 }
             }
 
             if (passesFound === 0) {
-                 resultsTable.innerHTML = '<tr><td colspan="4" class="fail">No pairings passed AA contrast.</td></tr>';
+                 resultsContainer.innerHTML = '<p style="text-align: center; color: var(--fail-color); font-weight: bold; padding: 10px; border: 1px dashed var(--neutral-border); border-radius: 4px;">No pairings passed AA contrast.</p>';
             } else {
-                 resultsTable.innerHTML = html;
+                 resultsContainer.innerHTML = html;
             }
         }
         
@@ -621,8 +796,8 @@
 
             if (hexCodes.length === 0) {
                 alert("Please enter at least one valid 6-digit hex code.");
-                document.querySelector('#white-contrast-results tbody').innerHTML = '';
-                document.querySelector('#all-pairings-results tbody').innerHTML = '';
+                document.getElementById('card-results').innerHTML = '';
+                document.getElementById('pairings-cards').innerHTML = '';
                 updateSwatches([]);
                 return;
             }
@@ -636,10 +811,6 @@
         // --- Initialization ---
 
         document.addEventListener('DOMContentLoaded', () => {
-             // Add event listener for AAA checkbox change
-             document.getElementById('aaa-check').addEventListener('change', checkContrast);
-             
-             // Run initial check with defaults
              checkContrast();
         });
     </script>
